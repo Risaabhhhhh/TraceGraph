@@ -1,0 +1,64 @@
+# Temporal split configuration for the Elliptic rolling-origin experiment.
+#
+# This is the default split config referenced by temporal_split.py.
+# All split definitions live here so they are version-controlled and reproducible.
+#
+# Rolling-origin protocol:
+#   - Train on steps [train_start .. train_end]
+#   - Validate on steps [val_start .. val_end]
+#   - Test on each window in test_windows separately
+#
+# The dark-market shutdown boundary (expected ~step 43) is captured
+# by having test windows that span before and after it.
+
+# Default split for Experiment C (temporal generalization)
+split_name: "elliptic_rolling_origin_v1"
+description: "Rolling-origin splits for Elliptic 49-timestep data"
+
+# Total available time steps: 1 to 49
+total_steps: 49
+
+# === Primary split (for Experiments A, B, D) ===
+primary:
+  train_steps: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+                21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+                31, 32, 33, 34]
+  val_steps:   [35, 36, 37, 38, 39]
+  test_steps:  [40, 41, 42, 43, 44, 45, 46, 47, 48, 49]
+
+# === Rolling-origin windows (for Experiment C) ===
+# Train once on early data, then evaluate on successive future windows.
+rolling_origin:
+  # Initial training window
+  initial_train_steps: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                        11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+  initial_val_steps:   [21, 22, 23, 24, 25]
+
+  # Test windows — each evaluated separately
+  test_windows:
+    - name: "window_1"
+      steps: [26, 27, 28, 29, 30]
+    - name: "window_2"
+      steps: [31, 32, 33, 34, 35]
+    - name: "window_3_pre_shutdown"
+      steps: [36, 37, 38, 39, 40]
+    - name: "window_4_around_shutdown"
+      steps: [41, 42, 43, 44, 45]
+    - name: "window_5_post_shutdown"
+      steps: [46, 47, 48, 49]
+
+  # Retraining policies for Experiment C
+  retrain_policies:
+    - name: "train_once"
+      description: "Train on initial window only, never retrain"
+    - name: "periodic_retrain"
+      description: "Retrain every 5 steps, expanding training window"
+      retrain_every_n_steps: 5
+    - name: "drift_triggered"
+      description: "Retrain when PSI > threshold or error rate exceeds baseline"
+      psi_threshold: 0.2
+      error_rate_threshold: 0.15
+
+# Seeds for reproducibility
+seeds: [42, 123, 456, 789, 1337]

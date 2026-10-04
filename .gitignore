@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Data (raw and processed are large files)
+ml/data/raw/*.csv
+ml/data/raw/*.zip
+ml/data/raw/*.tar.gz
+ml/data/processed/*.pkl
+ml/data/processed/*.json
+
+# ML artifacts (model weights, large files)
+ml/artifacts/*/model.*
+ml/artifacts/*/*.pt
+ml/artifacts/*/*.joblib
+
+# Experiment outputs (can be regenerated)
+ml/experiments/results/*.json
+ml/experiments/figures/*.png
+
+# Node modules
+node_modules/
+.next/
+
+# Hardhat
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
+
+# Coverage
+htmlcov/
+.coverage
+coverage.xml
+
+# Misc
+*.log
