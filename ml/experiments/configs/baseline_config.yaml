@@ -1,0 +1,41 @@
+# Phase 2 Baseline Models Configuration
+# Heuristic (Tier 0), Logistic Regression (Tier 1), XGBoost (Tier 1)
+
+experiment_name: "phase2_baselines"
+description: "Tabular and heuristic baselines evaluated on primary split and rolling windows"
+
+# Input data & split configs
+graph_path: "ml/data/processed/elliptic_graph.pkl"
+split_config_path: "ml/experiments/configs/split_config.yaml"
+
+# Output artifact locations
+output_dir: "ml/experiments/results"
+results_file: "ml/experiments/results/baseline_results.json"
+predictions_dir: "ml/experiments/results/predictions"
+frozen_heuristic_path: "ml/artifacts/heuristic/frozen_rule.json"
+
+# Evaluation seeds for learned models (heuristic is deterministic, run once)
+seeds: [42, 123, 456, 789, 1337]
+
+# Model specific configurations
+models:
+  heuristic:
+    tier: 0
+    max_depth: 2
+    criterion: "gini"
+    random_state: 42
+
+  logistic_regression:
+    tier: 1
+    C: 1.0
+    class_weight: "balanced"
+    max_iter: 1000
+
+  xgboost:
+    tier: 1
+    param_grid:
+      max_depth: [3, 5]
+      learning_rate: [0.05, 0.1]
+      n_estimators: [100, 150]
+    subsample: 0.8
+    colsample_bytree: 0.8
