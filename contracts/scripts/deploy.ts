@@ -24,14 +24,14 @@ async function main() {
   const manifestPath = path.resolve(__dirname, "../../ml/artifacts/v1.0.0/MANIFEST.json");
   let modelHash = "0x69082f2df0e866391ad2400ea6042f458ac0011925eda7630e58fe7d65736f5f";
   let version = "v1.0.0";
-  let uri = "ipfs://chainguard/models/v1.0.0/MANIFEST.json";
+  let uri = "https://raw.githubusercontent.com/Risaabhhhhh/TraceGraph/main/ml/artifacts/v1.0.0/MANIFEST.json";
 
   if (fs.existsSync(manifestPath)) {
     try {
       const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
       modelHash = manifest.model_hash || modelHash;
       version = manifest.version || version;
-      uri = `ipfs://chainguard/models/${version}/MANIFEST.json`;
+      uri = `https://raw.githubusercontent.com/Risaabhhhhh/TraceGraph/main/ml/artifacts/${version}/MANIFEST.json`;
     } catch (e) {
       console.warn("Could not parse MANIFEST.json, using defaults.");
     }

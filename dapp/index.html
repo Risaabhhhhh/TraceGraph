@@ -141,13 +141,31 @@
         <h2>Client-Side Cryptographic Manifest Verifier</h2>
         <p class="card-desc">Paste a model's <code>MANIFEST.json</code> to compute SHA-256 hashes directly in your browser and verify cryptographic integrity against on-chain ModelRegistry records.</p>
 
+        <!-- File Picker for Model Weights -->
+        <div class="weights-upload-section" style="background: rgba(11, 15, 25, 0.6); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--bg-card-border); display: flex; flex-direction: column; gap: 0.75rem;">
+          <h3 style="font-size: 1rem; color: #93c5fd;">Option A: Verify Model Weights File (.json / .bin)</h3>
+          <p class="card-desc" style="font-size: 0.82rem;">Upload the local model weights file (e.g. <code>xgboost_model.json</code>) to compute its SHA-256 hash client-side with WebCrypto and audit it directly against <code>ModelRegistry.sol</code>.</p>
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <input type="file" id="weights-file-input" accept=".json,.bin,.ubj" class="input-field" style="padding: 0.5rem; max-width: 320px;" onchange="handleWeightsFileUpload(event)">
+            <button class="btn btn-secondary" onclick="document.getElementById('weights-file-input').click()">Browse Weights File</button>
+            <span id="weights-file-name" class="mono" style="font-size: 0.8rem; color: var(--text-muted);">No file chosen</span>
+          </div>
+          <div id="weights-audit-result" style="display: none; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem;" class="mono"></div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem; margin: 0.5rem 0;">
+          <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">OR Verify Manifest JSON</span>
+          <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+        </div>
+
         <div class="verifier-actions">
-          <button class="btn btn-secondary" onclick="loadProductionManifest()">Load v1.0.0 Production Manifest</button>
-          <button class="btn btn-primary" onclick="verifyClientManifest()">Compute Hashes & Verify</button>
+          <button class="btn btn-secondary" onclick="loadProductionManifest()">Load v1.0.0 Manifest</button>
+          <button class="btn btn-primary" onclick="verifyClientManifest()">Verify Manifest JSON</button>
         </div>
 
         <div class="manifest-input-container">
-          <textarea id="manifest-json-input" class="textarea-field" rows="12" placeholder="Paste MANIFEST.json content here..."></textarea>
+          <textarea id="manifest-json-input" class="textarea-field" rows="8" placeholder="Paste MANIFEST.json content here..."></textarea>
         </div>
 
         <div id="manifest-verify-results" style="display: none;" class="verify-results-panel">

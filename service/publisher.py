@@ -134,7 +134,7 @@ class ChainGuardPublisher:
         manifest = self.engine.manifest
         model_hash = manifest["model_hash"]
         version = manifest["version"]
-        uri = f"ipfs://chainguard/models/{version}/MANIFEST.json"
+        uri = f"https://raw.githubusercontent.com/Risaabhhhhh/TraceGraph/main/ml/artifacts/{version}/MANIFEST.json"
 
         # 2. Compute canonical snapshot hash
         snapshot_records = [

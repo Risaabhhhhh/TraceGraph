@@ -1,22 +1,35 @@
-# ChainGuard Blockchain Integration Report
-
 ## 1. Executive Summary & Architecture
 
 ChainGuard bridges probabilistic machine learning risk detection with verifiable on-chain registries on the Ethereum Virtual Machine (EVM). The architecture is structured into two core contracts:
 
 1. **`ModelRegistry.sol`**:
-   - Manages model artifact provenance, versioning (`v1.0.0`), documentation URIs (`ipfs://...`), and cryptographic identity (`bytes32 modelHash`).
+   - Manages model artifact provenance, versioning (`v1.0.0`), documentation URIs (`https://raw.githubusercontent.com/.../MANIFEST.json`), and cryptographic identity (`bytes32 modelHash`).
    - Implements role-based access control (`MODEL_MANAGER_ROLE`) to activate or revoke approved models.
+   - **On-Chain Fields Stored**:
+     - `bytes32 modelHash`: SHA-256 hash of the exact model weights binary (`xgboost_model.json`). Primary key.
+     - `string version`: Semantic version identifier (e.g. `"v1.0.0"`).
+     - `string uri`: Public URL pointing to model documentation and MANIFEST.json.
+     - `bool active`: Status flag allowing or preventing risk score publishing for this model.
+     - `uint256 registeredAt`: Block timestamp when the model was registered.
    
 2. **`RiskRegistry.sol`**:
    - Implements an amortized, batch-oriented risk publishing pipeline (`createBatch` $\to$ `publishScores`).
    - Every published batch cryptographically links to an **active model** in `ModelRegistry` (`modelHash`) and an immutable **input transaction snapshot** (`snapshotHash`).
-   - Scores are stored as 16-bit unsigned integers representing basis points ($0$ to $10,000$, equivalent to $0.00\%$ to $100.00\%$ illicit probability).
+   - **On-Chain Fields Stored**:
+     - `batches[batchId]`:
+       - `bytes32 modelHash`: Identifier of the active model used for inference.
+       - `bytes32 snapshotHash`: Canonical SHA-256 hash over sorted `(address, score)` snapshot payload.
+       - `uint256 timestamp`: Block timestamp of batch creation.
+       - `uint256 count`: Cumulative number of addresses scored in this batch.
+     - `scores[account]`:
+       - `uint16 score`: Risk score in basis points ($0$ to $10,000$, equivalent to $0.00\%$ to $100.00\%$ illicit probability).
+       - `uint256 batchId`: Identifier of the batch in which this score was published.
+       - `uint256 timestamp`: Block timestamp when the score was written on-chain.
 
 ```
 ┌─────────────────────────────────┐
-│     Trained Model Artifact      │
-│  (XGBoost 165 Feat, Seed 42)   │
+│     Trained Model Weights       │
+│  (xgboost_model.json, Seed 42)  │
 └────────────────┬────────────────┘
                  │ SHA-256 Hash
                  ▼
@@ -24,7 +37,9 @@ ChainGuard bridges probabilistic machine learning risk detection with verifiable
 │       ModelRegistry.sol         │ ◄──────────────────────────────┐
 │  - modelHash: 0x69082f2...      │                                │
 │  - version: "v1.0.0"            │                                │
+│  - uri: "https://raw.github..." │                                │
 │  - active: true                 │                                │
+│  - registeredAt: 1791220275     │                                │
 └─────────────────────────────────┘                                │
                                                                    │
 ┌─────────────────────────────────┐       createBatch(modelHash)   │
@@ -36,6 +51,8 @@ ChainGuard bridges probabilistic machine learning risk detection with verifiable
 │      * count / timestamp        │
 │  - scores[address]:             │ ◄── publishScores(batchId, addrs, scores)
 │      * score: 8540 (85.40%)     │
+│      * batchId: 0               │
+│      * timestamp: 1791220282    │
 └─────────────────────────────────┘
 ```
 
@@ -66,14 +83,24 @@ A central tenet of ChainGuard's system design is the explicit distinction betwee
 
 > **"Verified origin, not verified accuracy."**
 
+### 3.1 Hash Verifiability Scope: On-Chain vs. Off-Chain
+- **Verifiable Directly On-Chain**:
+  - `modelHash` (bytes32): Cryptographic SHA-256 hash of the model weights file (`xgboost_model.json`). Directly verified by smart contracts before accepting score batches.
+  - `snapshotHash` (bytes32): Cryptographic SHA-256 hash of the input address-score snapshot. Recorded directly in the batch header.
+- **Verifiable Off-Chain via MANIFEST.json**:
+  - `config_hash` (SHA-256 of `config.json`): Verifiable by fetching the file from the registered GitHub URL.
+  - `metrics_hash` (SHA-256 of `metrics.json`): Verifiable by computing SHA-256 client-side.
+  - `manifest_hash` (SHA-256 of the complete JSON payload).
+
+### 3.2 Precise Cryptographic Guarantee
 1. **What On-Chain Verification Guarantees**:
-   - **Tamper Evidence**: Once recorded on-chain, nobody can alter the risk score assigned to an address without emitting an event and updating the batch ID.
-   - **Auditable Lineage**: Any decentralized application, compliance officer, or protocol can verify that score $S$ for address $A$ was generated by model $M$ (matching SHA-256 binary hash `0x6908...`) operating on data snapshot $D$ (matching SHA-256 hash `0xa1b2...`).
-   - **Model Authorization**: Scores cannot be published using unapproved, deprecated, or revoked model hashes.
+   - **Model Binary Lineage**: Proves mathematically that score $S$ for address $A$ in batch $B$ was published under model hash $M$ and input snapshot $D$. Anyone with the `xgboost_model.json` file can hash it locally to verify it is the exact binary authorized on-chain.
+   - **Tamper Evidence**: Once recorded on-chain, scores and batch lineages cannot be secretly altered or backdated without emitting on-chain events.
+   - **Authorization Gate**: Scores cannot be published using unapproved, unregistered, or revoked model hashes.
 
 2. **What On-Chain Verification Does NOT Guarantee**:
-   - **Infallible Truth**: Machine learning models produce probabilistic estimates. A score of $85.40\%$ indicates that the model detected behavioral patterns similar to illicit transactions in the historical Elliptic dataset, not an absolute legal determination of guilt.
-   - **Ground Truth Invariance**: As shown in ML Phase 2/3 drift experiments, macro structural changes (e.g. darknet marketplace takedowns) can shift underlying distributions. Provenance guarantees which model ran, not that the model never makes false positives.
+   - **Does NOT Prove Documentation Untampered**: The blockchain records `modelHash` and `snapshotHash`. It does not store all training metrics or hyperparameters on-chain; those are audited off-chain via `MANIFEST.json`.
+   - **Does NOT Prove Real-World Truth / Accuracy**: Machine learning inference is fundamentally probabilistic. An on-chain score of $85.40\%$ proves which model made the prediction, not that the transaction is legally illicit. Ground truth is subject to macroeconomic drift, novel evasion techniques, and false positive rates.
 
 ---
 

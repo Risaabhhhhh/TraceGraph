@@ -228,6 +228,79 @@ function setAndQueryAddress(addr) {
 /**
  * CLIENT-SIDE MANIFEST VERIFIER & ON-CHAIN MODEL AUDITOR
  */
+/**
+ * AUDIT MODEL WEIGHTS BINARY CLIENT-SIDE VIA WEBCRYPTO
+ */
+async function handleWeightsFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  document.getElementById("weights-file-name").innerText = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+  const resultDiv = document.getElementById("weights-audit-result");
+  resultDiv.style.display = "block";
+  resultDiv.style.background = "rgba(59, 130, 246, 0.15)";
+  resultDiv.style.borderColor = "rgba(59, 130, 246, 0.4)";
+  resultDiv.style.color = "#93c5fd";
+  resultDiv.innerHTML = "Computing client-side SHA-256 hash via WebCrypto...";
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const computedHash = "0x" + hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+    console.log(`Computed SHA-256 for ${file.name}: ${computedHash}`);
+
+    const provider = getProvider();
+    if (!provider) {
+      throw new Error("Ethers.js provider not initialized");
+    }
+
+    const modelContract = new ethers.Contract(CONTRACT_ADDRESSES.ModelRegistry, MODEL_REGISTRY_ABI, provider);
+
+    try {
+      const isActive = await modelContract.isModelActive(computedHash);
+      const record = await modelContract.getModel(computedHash);
+
+      if (isActive) {
+        resultDiv.style.background = "rgba(16, 185, 129, 0.15)";
+        resultDiv.style.border = "1px solid rgba(16, 185, 129, 0.4)";
+        resultDiv.style.color = "#34d399";
+        resultDiv.innerHTML = `
+          <div style="font-weight: bold; margin-bottom: 0.35rem;">✅ VALID WEIGHTS FILE — MATCHES ON-CHAIN MODEL HASH</div>
+          <div><strong>Computed SHA-256:</strong> ${computedHash}</div>
+          <div><strong>Model Version:</strong> ${record.version} | <strong>Status:</strong> ACTIVE</div>
+          <div style="word-break: break-all;"><strong>Registered URI:</strong> ${record.uri}</div>
+        `;
+      } else {
+        resultDiv.style.background = "rgba(245, 158, 11, 0.15)";
+        resultDiv.style.border = "1px solid rgba(245, 158, 11, 0.4)";
+        resultDiv.style.color = "#fbbf24";
+        resultDiv.innerHTML = `
+          <div style="font-weight: bold; margin-bottom: 0.35rem;">⚠️ MODEL WEIGHTS REGISTERED BUT INACTIVE / REVOKED</div>
+          <div><strong>Computed SHA-256:</strong> ${computedHash}</div>
+          <div><strong>Version:</strong> ${record.version} (Revoked on-chain)</div>
+        `;
+      }
+    } catch (e) {
+      // Reverted with ModelNotFound
+      resultDiv.style.background = "rgba(239, 68, 68, 0.15)";
+      resultDiv.style.border = "1px solid rgba(239, 68, 68, 0.4)";
+      resultDiv.style.color = "#f87171";
+      resultDiv.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 0.35rem;">❌ TAMPERED / UNREGISTERED WEIGHTS FILE (MISMATCH)</div>
+        <div><strong>Computed SHA-256:</strong> ${computedHash}</div>
+        <div><strong>On-Chain Status:</strong> ModelNotFound in ModelRegistry (${CONTRACT_ADDRESSES.ModelRegistry})</div>
+      `;
+    }
+  } catch (err) {
+    resultDiv.style.background = "rgba(239, 68, 68, 0.15)";
+    resultDiv.style.border = "1px solid rgba(239, 68, 68, 0.4)";
+    resultDiv.style.color = "#f87171";
+    resultDiv.innerHTML = `<strong>Error auditing weights file:</strong> ${err.message}`;
+  }
+}
+
 async function loadProductionManifest() {
   const sampleManifest = {
     "version": "v1.0.0",

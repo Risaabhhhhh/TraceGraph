@@ -9,7 +9,7 @@
   "initialModel": {
     "modelHash": "0x69082f2df0e866391ad2400ea6042f458ac0011925eda7630e58fe7d65736f5f",
     "version": "v1.0.0",
-    "uri": "ipfs://chainguard/models/v1.0.0/MANIFEST.json"
+    "uri": "https://raw.githubusercontent.com/Risaabhhhhh/TraceGraph/main/ml/artifacts/v1.0.0/MANIFEST.json"
   },
-  "deployedAt": "2026-10-05T17:00:12.097Z"
+  "deployedAt": "2026-10-05T17:38:12.871Z"
 }
