@@ -226,3 +226,29 @@ class TestFeatureLeakage:
         assert all(t in train_set for t in train_ts), (
             "Some train node features come from non-train time steps"
         )
+from src.train.train_gnn import create_pyg_data
+
+class TestGNNGraphConstruction:
+    def test_gnn_train_mask_no_future(self, graph, primary_split):
+        """Train mask in PyG data must not include val/test nodes."""
+        data = create_pyg_data(primary_split, graph, "train")
+        time_steps = graph["time_steps"]
+        
+        # Supervised train nodes
+        train_sup = data.mask.numpy()
+        sup_ts = time_steps[train_sup]
+        max_train = max(primary_split.train_steps)
+        
+        assert (sup_ts <= max_train).all(), "GNN train mask leaks into future periods"
+
+    def test_gnn_train_edges_no_future(self, graph, primary_split):
+        """Train edge index in PyG data must not include val/test nodes."""
+        data = create_pyg_data(primary_split, graph, "train")
+        time_steps = graph["time_steps"]
+        
+        src_ts = time_steps[data.edge_index[0].numpy()]
+        dst_ts = time_steps[data.edge_index[1].numpy()]
+        max_train = max(primary_split.train_steps)
+        
+        assert (src_ts <= max_train).all(), "GNN train edges have future sources"
+        assert (dst_ts <= max_train).all(), "GNN train edges have future destinations"

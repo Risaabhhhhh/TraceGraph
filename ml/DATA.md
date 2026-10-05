@@ -61,8 +61,8 @@ python ml/src/features/build_graph.py
 - **Total Nodes (Transactions)**: 203,769
 - **Total Directed Edges (Flows)**: 234,355 (0 invalid or dropped edges)
 - **Node Features (`node_features`)**: `np.ndarray` shape `(203769, 165)` (`float32`)
-  - **Local Features (1-93)**: Transaction fee, in/out degree, BTC output volume, etc.
-  - **Aggregated Features (94-165)**: 1-hop neighbor aggregation (mean, std, min, max of neighbor features).
+  - **Local Features (0-93)**: 94 features. Transaction fee, in/out degree, BTC output volume, etc.
+  - **Aggregated Features (94-164)**: 71 features. 1-hop neighbor aggregation (mean, std, min, max of neighbor features).
 - **Time Steps (`time_steps`)**: `np.ndarray` shape `(203769,)` (`int32`), values `1` through `49`.
 - **Labels (`labels`)**: `np.ndarray` shape `(203769,)` (`int8`), mapped as:
   - `1`: Illicit (4,545 nodes, ~2.23% of all nodes, 9.76% of labeled nodes)

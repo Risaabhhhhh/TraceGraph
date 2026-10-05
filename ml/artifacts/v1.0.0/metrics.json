@@ -1,0 +1,10 @@
+{
+  "pr_auc": 0.67868,
+  "f1": 0.65588,
+  "precision": 0.71561,
+  "recall": 0.60535,
+  "recall_at_80_precision": 0.60063,
+  "recall_at_90_precision": 0.58491,
+  "n_test_samples": 11184,
+  "n_test_illicit": 636
+}

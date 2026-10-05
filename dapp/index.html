@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChainGuard — On-Chain ML Provenance & Risk Registry</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo-shield">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="title">ChainGuard</h1>
+          <p class="subtitle">Cryptographic ML Provenance & On-Chain Risk Registry</p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge badge-network" id="network-badge">Hardhat Local (31337)</span>
+        <span class="badge badge-status" id="status-badge">Service Connected</span>
+      </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="tabs">
+      <button class="tab-btn active" id="tab-lookup-btn" onclick="switchTab('lookup')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        Address Risk Lookup
+      </button>
+      <button class="tab-btn" id="tab-verify-btn" onclick="switchTab('verify')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M12 8v4"/><path d="M12 16h.01"/>
+        </svg>
+        Manifest Cryptographic Verifier
+      </button>
+      <button class="tab-btn" id="tab-demo-btn" onclick="switchTab('demo')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
+        </svg>
+        Demo Addresses
+      </button>
+    </nav>
+
+    <!-- TAB 1: LOOKUP -->
+    <main id="tab-lookup" class="tab-content active">
+      <section class="card lookup-card">
+        <h2>Query Address Risk Score & Provenance</h2>
+        <p class="card-desc">Enter an EVM address or pick a pre-scored demo test address to inspect its on-chain risk score and complete cryptographic provenance.</p>
+        
+        <div class="search-box">
+          <input type="text" id="lookup-address" placeholder="0x... EVM address" class="input-field" spellcheck="false">
+          <button class="btn btn-primary" id="btn-search" onclick="lookupAddressScore()">Query Risk Score</button>
+        </div>
+
+        <div class="demo-chips">
+          <span class="chips-label">Quick Demo Addresses:</span>
+          <button class="chip" onclick="setAndQueryAddress('0x6333918a3857d472251a37c35c6fe649bf558dc1')">Node #0 (Illicit)</button>
+          <button class="chip" onclick="setAndQueryAddress('0xd571c4c1a2dbd52b9631c5188fa6498bb97cfae6')">Node #1 (Licit)</button>
+          <button class="chip" onclick="setAndQueryAddress('0x1bf5e9ae51a3641a9956d691e8ea36ffbe3e9334')">Node #2 (Licit)</button>
+        </div>
+      </section>
+
+      <!-- Results Card -->
+      <section id="lookup-results" class="card result-card" style="display: none;">
+        <!-- Crucial Notice -->
+        <div class="notice-banner">
+          <div class="notice-icon">ℹ️</div>
+          <div class="notice-text">
+            <strong>Verified origin, not verified accuracy:</strong>
+            The cryptographic hashes below prove on-chain provenance (which model and dataset snapshot generated this score). Machine learning inferences remain probabilistic and do not constitute absolute legal certainty.
+          </div>
+        </div>
+
+        <div class="score-display-grid">
+          <div class="score-gauge-panel">
+            <div class="gauge-value" id="score-percentage">--%</div>
+            <div class="gauge-points" id="score-basis-points">0 / 10,000 basis points</div>
+            <div class="risk-badge" id="risk-badge">LOW RISK</div>
+          </div>
+
+          <div class="provenance-details-panel">
+            <h3>Cryptographic Provenance Record</h3>
+            <table class="provenance-table">
+              <tr>
+                <td class="prop-name">Target Address:</td>
+                <td class="prop-val mono" id="res-address">--</td>
+              </tr>
+              <tr>
+                <td class="prop-name">Address Type:</td>
+                <td class="prop-val" id="res-addr-type">Demo Test Address (Elliptic Bitcoin Graph)</td>
+              </tr>
+              <tr>
+                <td class="prop-name">Batch ID:</td>
+                <td class="prop-val mono" id="res-batch-id">--</td>
+              </tr>
+              <tr>
+                <td class="prop-name">Model Version:</td>
+                <td class="prop-val" id="res-model-ver">v1.0.0 (XGBoost 165 Features)</td>
+              </tr>
+              <tr>
+                <td class="prop-name">Model Hash (SHA-256):</td>
+                <td class="prop-val mono hash-val" id="res-model-hash">--</td>
+              </tr>
+              <tr>
+                <td class="prop-name">Snapshot Hash (SHA-256):</td>
+                <td class="prop-val mono hash-val" id="res-snapshot-hash">--</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- TAB 2: MANIFEST VERIFIER -->
+    <main id="tab-verify" class="tab-content" style="display: none;">
+      <section class="card">
+        <h2>Client-Side Cryptographic Manifest Verifier</h2>
+        <p class="card-desc">Paste a model's <code>MANIFEST.json</code> to compute SHA-256 hashes directly in your browser and verify cryptographic integrity against on-chain ModelRegistry records.</p>
+
+        <div class="verifier-actions">
+          <button class="btn btn-secondary" onclick="loadProductionManifest()">Load v1.0.0 Production Manifest</button>
+          <button class="btn btn-primary" onclick="verifyClientManifest()">Compute Hashes & Verify</button>
+        </div>
+
+        <div class="manifest-input-container">
+          <textarea id="manifest-json-input" class="textarea-field" rows="12" placeholder="Paste MANIFEST.json content here..."></textarea>
+        </div>
+
+        <div id="manifest-verify-results" style="display: none;" class="verify-results-panel">
+          <h3>Verification Audit Summary</h3>
+          <div class="audit-grid">
+            <div class="audit-item" id="audit-model">
+              <span class="audit-label">Model Hash:</span>
+              <span class="audit-status match">MATCHES MANIFEST</span>
+              <div class="mono small-hash" id="audit-model-val">--</div>
+            </div>
+            <div class="audit-item" id="audit-config">
+              <span class="audit-label">Config Hash:</span>
+              <span class="audit-status match">VALID FORMAT</span>
+              <div class="mono small-hash" id="audit-config-val">--</div>
+            </div>
+            <div class="audit-item" id="audit-metrics">
+              <span class="audit-label">Metrics Hash:</span>
+              <span class="audit-status match">VALID FORMAT</span>
+              <div class="mono small-hash" id="audit-metrics-val">--</div>
+            </div>
+            <div class="audit-item" id="audit-chain">
+              <span class="audit-label">On-Chain Registry Status:</span>
+              <span class="audit-status match" id="audit-chain-status">REGISTERED & ACTIVE</span>
+              <div class="mono small-hash" id="audit-contract-val">ModelRegistry: 0x5FbDB231...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- TAB 3: DEMO ADDRESSES -->
+    <main id="tab-demo" class="tab-content" style="display: none;">
+      <section class="card">
+        <h2>Pre-Scored Demo Test Window Transactions</h2>
+        <p class="card-desc">Elliptic Bitcoin test nodes (Steps 40–49) mapped deterministically to EVM demo addresses with computed XGBoost risk scores.</p>
+        
+        <div class="table-container">
+          <table class="demo-table">
+            <thead>
+              <tr>
+                <th>Demo EVM Address</th>
+                <th>Elliptic Node</th>
+                <th>Risk Score</th>
+                <th>Risk Tier</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="demo-table-body">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted);">Loading demo transactions...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>ChainGuard Protocol • Model: XGBoost (All Features, Seed 42, v1.0.0) • Elliptic Bitcoin Dataset</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

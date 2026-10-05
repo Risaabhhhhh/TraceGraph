@@ -1,0 +1,31 @@
+{
+  "version": "v1.0.0",
+  "model_type": "xgboost_all_features",
+  "model_hash": "0x69082f2df0e866391ad2400ea6042f458ac0011925eda7630e58fe7d65736f5f",
+  "config_hash": "0xc10edd52cb5cecec712a8eb2dbdb3d5010c887914a96888ed897892c2cfff275",
+  "metrics_hash": "0xa0c59676c88a07c276757e52a7e8c49b00b0079b83582a4af4ff7dd52f0700a9",
+  "data_split_id": "primary_steps_1_34_val_35_39_test_40_49",
+  "trained_at": "2026-10-05T15:26:08.536459+00:00",
+  "seed": 42,
+  "metrics": {
+    "pr_auc": 0.67868,
+    "f1": 0.65588,
+    "precision": 0.71561,
+    "recall": 0.60535,
+    "recall_at_80_precision": 0.60063,
+    "recall_at_90_precision": 0.58491,
+    "n_test_samples": 11184,
+    "n_test_illicit": 636
+  },
+  "hyperparameters": {
+    "max_depth": 5,
+    "learning_rate": 0.1,
+    "n_estimators": 150
+  },
+  "artifacts": {
+    "model_file": "xgboost_model.json",
+    "config_file": "config.json",
+    "metrics_file": "metrics.json"
+  },
+  "manifest_hash": "0xd49c0d7f35f235815089ea122307a856d475e391ca2831f312ec6d7c3a281063"
+}

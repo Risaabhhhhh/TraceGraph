@@ -327,7 +327,7 @@ def run_all_baselines(config_path: Path = DEFAULT_CONFIG_PATH) -> Dict[str, Any]
     all_results["primary_split"]["logistic_regression"] = lr_prim
     print(f"  LogReg    -> PR-AUC: {lr_prim['pr_auc_mean']:.4f} ± {lr_prim['pr_auc_std']:.4f} | "
           f"F1: {lr_prim['f1_mean']:.4f} ± {lr_prim['f1_std']:.4f} | "
-          f"Rec@80%Prec: {lr_prim['recall_at_prec_80_mean']:.4f} | Rec@90%Prec: {lr_prim['recall_at_prec_90_mean']:.4f}")
+          f"Rec@80%Prec: {lr_prim['recall_at_prec_80_mean']:.4f} ± {lr_prim['recall_at_prec_80_std']:.4f} | Rec@90%Prec: {lr_prim['recall_at_prec_90_mean']:.4f} ± {lr_prim['recall_at_prec_90_std']:.4f}")
 
     print("\n--- Model: XGBoost (Tier 1) [5 seeds, tuned on Val] ---")
     xgb_prim = train_and_eval_xgboost(
@@ -340,7 +340,7 @@ def run_all_baselines(config_path: Path = DEFAULT_CONFIG_PATH) -> Dict[str, Any]
     all_results["primary_split"]["xgboost"] = xgb_prim
     print(f"  XGBoost   -> PR-AUC: {xgb_prim['pr_auc_mean']:.4f} ± {xgb_prim['pr_auc_std']:.4f} | "
           f"F1: {xgb_prim['f1_mean']:.4f} ± {xgb_prim['f1_std']:.4f} | "
-          f"Rec@80%Prec: {xgb_prim['recall_at_prec_80_mean']:.4f} | Rec@90%Prec: {xgb_prim['recall_at_prec_90_mean']:.4f}")
+          f"Rec@80%Prec: {xgb_prim['recall_at_prec_80_mean']:.4f} ± {xgb_prim['recall_at_prec_80_std']:.4f} | Rec@90%Prec: {xgb_prim['recall_at_prec_90_mean']:.4f} ± {xgb_prim['recall_at_prec_90_std']:.4f}")
     print(f"  Best XGBoost Params: {xgb_prim.get('best_params', {})}")
 
     # ==========================================
@@ -379,7 +379,7 @@ def run_all_baselines(config_path: Path = DEFAULT_CONFIG_PATH) -> Dict[str, Any]
         all_results["rolling_origin"][w_name]["logistic_regression"] = lr_res
         print(f"  LogReg    -> PR-AUC: {lr_res['pr_auc_mean']:.4f} ± {lr_res['pr_auc_std']:.4f} | "
               f"F1: {lr_res['f1_mean']:.4f} ± {lr_res['f1_std']:.4f} | "
-              f"Rec@80%Prec: {lr_res['recall_at_prec_80_mean']:.4f}")
+              f"Rec@80%Prec: {lr_res['recall_at_prec_80_mean']:.4f} ± {lr_res['recall_at_prec_80_std']:.4f}")
 
         # XGBoost
         xgb_res = train_and_eval_xgboost(
@@ -392,7 +392,7 @@ def run_all_baselines(config_path: Path = DEFAULT_CONFIG_PATH) -> Dict[str, Any]
         all_results["rolling_origin"][w_name]["xgboost"] = xgb_res
         print(f"  XGBoost   -> PR-AUC: {xgb_res['pr_auc_mean']:.4f} ± {xgb_res['pr_auc_std']:.4f} | "
               f"F1: {xgb_res['f1_mean']:.4f} ± {xgb_res['f1_std']:.4f} | "
-              f"Rec@80%Prec: {xgb_res['recall_at_prec_80_mean']:.4f}")
+              f"Rec@80%Prec: {xgb_res['recall_at_prec_80_mean']:.4f} ± {xgb_res['recall_at_prec_80_std']:.4f}")
 
     # ==========================================
     # 3. SAVE RESULTS & PRINT SUMMARY TABLE
@@ -423,17 +423,17 @@ def print_summary_table(results: dict):
     lr = p["logistic_regression"]
     lr_prauc = f"{lr['pr_auc_mean']:.4f} ± {lr['pr_auc_std']:.4f}"
     lr_f1 = f"{lr['f1_mean']:.4f} ± {lr['f1_std']:.4f}"
-    lr_r80 = f"{lr['recall_at_prec_80_mean']:.4f}"
-    lr_r90 = f"{lr['recall_at_prec_90_mean']:.4f}"
+    lr_r80 = f"{lr['recall_at_prec_80_mean']:.4f} ± {lr['recall_at_prec_80_std']:.4f}"
+    lr_r90 = f"{lr['recall_at_prec_90_mean']:.4f} ± {lr['recall_at_prec_90_std']:.4f}"
     print(f"{'Logistic Regression':<22} | {lr_prauc:<20} | {lr_f1:<18} | {lr_r80:<14} | {lr_r90:<14}")
 
     # XGBoost
     xg = p["xgboost"]
     xg_prauc = f"{xg['pr_auc_mean']:.4f} ± {xg['pr_auc_std']:.4f}"
     xg_f1 = f"{xg['f1_mean']:.4f} ± {xg['f1_std']:.4f}"
-    xg_r80 = f"{xg['recall_at_prec_80_mean']:.4f}"
-    xg_r90 = f"{xg['recall_at_prec_90_mean']:.4f}"
-    print(f"{'XGBoost (Tier 1)':<22} | {xg_prauc:<20} | {xg_f1:<18} | {xg_r80:<14} | {xg_r90:<14}")
+    xg_r80 = f"{xg['recall_at_prec_80_mean']:.4f} ± {xg['recall_at_prec_80_std']:.4f}"
+    xg_r90 = f"{xg['recall_at_prec_90_mean']:.4f} ± {xg['recall_at_prec_90_std']:.4f}"
+    print(f"{'XGBoost (Tier 1)':<22} | {xg_prauc:<20} | {xg_f1:<18} | {xg_r80:<20} | {xg_r90:<20}")
     print("=" * 90)
 
 

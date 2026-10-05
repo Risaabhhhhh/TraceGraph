@@ -1,0 +1,8 @@
+{
+  "name": "chainguard-dapp",
+  "version": "1.0.0",
+  "description": "ChainGuard Web3 Risk Score & Model Provenance Explorer",
+  "scripts": {
+    "dev": "npx serve -l 3000 ."
+  }
+}
